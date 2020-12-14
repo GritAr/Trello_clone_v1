@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
-import { DragDropContext } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 
 import TrelloList from './TrelloList';
 import { sort } from '../actions';
@@ -12,8 +12,8 @@ const ListContainer = styled.div`
 `
 
 class App extends React.Component {
-  onDragEnd = (result) => {
-    const { destination, source, draggableId } = result;
+  onDragEnd = result => {
+    const { destination, source, draggableId, type } = result;
     
     if(!destination) {return}
     this.props.dispatch (
@@ -22,7 +22,8 @@ class App extends React.Component {
         destination.droppableId,
         source.index,
         destination.index,
-        draggableId
+        draggableId,
+        type
       )
     )
 
@@ -34,17 +35,29 @@ class App extends React.Component {
       <DragDropContext onDragEnd={this.onDragEnd}>
         <div className="App">
           <h2>TRELLO CLONE</h2>
-          <ListContainer>
-            {lists.map(list => (
-              <TrelloList
-                listId = {list.id} 
-                key={list.id}
-                title={list.title} 
-                cards={list.cards}
-            />
-            ))}
-            <TrelloActionButton list />
-          </ListContainer>
+          <Droppable 
+            droppableId="all-lists"
+            direction="horizontal"
+            type="list"
+          >
+            {provided => (
+               <ListContainer 
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+              >
+                {lists.map((list, index) => (
+                  <TrelloList
+                    listId = {list.id} 
+                    key={list.id}
+                    title={list.title} 
+                    cards={list.cards}
+                    index={index}
+                  />
+                ))}
+                <TrelloActionButton list />
+             </ListContainer>
+            )}
+          </Droppable>
         </div>
       </DragDropContext>
     );

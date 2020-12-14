@@ -49,7 +49,7 @@ const listsReducer = (state = initialState, action) => {
             listId += 1;
             return [...state, newList];
 
-        case CONSTANTS.ADD_CARD:
+        case CONSTANTS.ADD_CARD: {
             const newCard = {
                 text: action.payload.text,
                 id: `card-${cardId}`,
@@ -68,6 +68,7 @@ const listsReducer = (state = initialState, action) => {
             })
         
             return newState;
+        }
 
             case CONSTANTS.DRAG_DONE: {
                 const {
@@ -75,9 +76,16 @@ const listsReducer = (state = initialState, action) => {
                     droppableIdEnd,
                     droppableIndexStart,
                     droppableIndexEnd,
-                    // draggableId 
+                    type,
                 } = action.payload;
                 const newState = [...state];
+
+                // dragging lists around
+                if(type === 'list') {
+                    const list = newState.splice(droppableIndexStart, 1);
+                    newState.splice(droppableIndexEnd, 0, ...list);
+                    return newState
+                }
                 
                 // in the same list
                 if(droppableIdStart === droppableIdEnd) {
@@ -86,11 +94,23 @@ const listsReducer = (state = initialState, action) => {
                     list.cards.splice(droppableIndexEnd, 0, ...card);
                 }
 
+                // other list
+                if (droppableIdStart !== droppableIdEnd) {
+                    // find the list where drag happened
+                    const listStart = state.find(list => droppableIdStart === list.id);
+                    // pull out the card from this list
+                    const card = listStart.cards.splice(droppableIndexStart, 1);
+                    //find the list where draf ended
+                    const listEnd = state.find(list => droppableIdEnd === list.id);
+                    // put the card in the new list
+                    listEnd.cards.splice(droppableIndexEnd, 0, ...card)
+                }
+
                 return newState;
             }
         default:
             return state;
     }
-}
+};
 
 export default listsReducer;
